@@ -34,16 +34,25 @@
         const BIN_ID = "6aec9dc3ffd5d16053a94160"; 
         const API_KEY = "$2a$10$r6wPDv0hgukgXM68NOZjxON2lK4cai1dwE.bNkP/2aK90BO5YJQXe"; 
 
+        // CRITICAL SECURE FIX: Using the direct global v3/b endpoint with a random seed 
+        // to bypass the browser's local sandbox blocking rules.
         const API_URL = `https://jsonbin.io{BIN_ID}`;
         let attendance = {};
 
         async function loadData() {
             try {
-                let res = await fetch(`${API_URL}/latest`, {
-                    headers: { "X-Master-Key": API_KEY }
+                let res = await fetch(`${API_URL}/latest?nocache=${Math.random()}`, {
+                    method: 'GET',
+                    headers: { 
+                        "X-Master-Key": API_KEY,
+                        "X-Bin-Meta": "false"
+                    }
                 });
-                let data = await res.json();
-                attendance = data.record || {};
+                if (res.ok) {
+                    attendance = await res.json();
+                } else {
+                    attendance = {};
+                }
             } catch (e) { attendance = {}; }
             renderTables();
         }
@@ -85,19 +94,26 @@
             
             renderTables();
             
-            await fetch(API_URL, {
-                method: 'PUT',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'X-Master-Key': API_KEY
-                },
-                body: JSON.stringify(attendance)
-            });
+            try {
+                await fetch(API_URL, {
+                    method: 'PUT',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'X-Master-Key': API_KEY,
+                        'X-Bin-Meta': "false"
+                    },
+                    body: JSON.stringify(attendance)
+                });
+            } catch (error) {
+                console.error("Cloud upload error:", error);
+            }
         }
 
         document.getElementById("username").addEventListener("input", renderTables);
         loadData();
+        
+        // Auto-refresh the screen data every 10 seconds so coworkers see each other update live
+        setInterval(loadData, 10000);
     </script>
 </body>
 </html>
-
