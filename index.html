@@ -6,25 +6,39 @@
     <style>
         body { font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; background-color: #f9f9f9; color: #333; }
         table { width: 100%; border-collapse: collapse; margin-bottom: 25px; background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; vertical-align: top; }
         th { background-color: #f2f2f2; font-weight: bold; }
-        .btn-slot { display: block; width: 100%; padding: 10px; text-align: center; cursor: pointer; border: 1px solid #ccc; background: #fafafa; border-radius: 4px; font-size: 16px; }
-        .btn-slot.checked { background: #4CAF50; color: white; border-color: #4CAF50; }
-        input[type="text"] { padding: 10px; margin-bottom: 15px; width: 100%; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
+        
+        /* Master Table Cell Capacity Indicators */
+        .capacity-badge { font-weight: bold; font-size: 15px; display: block; margin-bottom: 4px; }
+        .capacity-safe { color: #2e7d32; }   /* Green when under limit */
+        .capacity-danger { color: #d32f2f; } /* Red when 8 or more people */
+        
+        .initials-list { font-size: 11px; color: #666; display: block; line-height: 1.3; word-break: break-word; }
+        
+        /* Voting Buttons Layout */
+        .btn-slot { display: block; width: 100%; padding: 10px; text-align: center; cursor: pointer; border: 1px solid #ccc; background: #fafafa; border-radius: 4px; font-size: 16px; transition: all 0.2s ease; }
+        .btn-slot.checked { background: #4CAF50; color: white; border-color: #4CAF50; font-weight: bold; }
+        
+        input[type="text"] { padding: 12px; margin-bottom: 5px; width: 100%; box-sizing: border-box; border: 2px solid #ccc; border-radius: 4px; font-size: 15px; transition: border 0.2s ease; }
+        input[type="text"].alert-flash { border-color: #f44336; background-color: #ffebee; }
         h2, h3 { margin-top: 20px; color: #111; }
         .btn-save { display: block; width: 100%; padding: 15px; background-color: #0078d4; color: white; border: none; border-radius: 4px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .btn-save:hover { background-color: #005a9e; }
+        .status-banner { font-size: 13px; font-weight: bold; margin-bottom: 15px; min-height: 18px; color: #666; }
     </style>
 </head>
 <body>
     <h2>📍 Présence Patchwork - </h2>
     <table>
-        <thead><tr><th>Day</th><th>AM</th><th>PM</th></tr></thead>
+        <thead><tr><th style="width: 20%;">Day</th><th style="width: 40%;">AM</th><th style="width: 40%;">PM</th></tr></thead>
         <tbody id="presence-table"></tbody>
     </table>
 
     <h3>Ma Présence</h3>
     <input type="text" id="username" placeholder="👉 Enter initials to view or modify your data">
+    <div id="profile-status" class="status-banner"></div>
+
     <table>
         <thead><tr><th>Day</th><th>AM</th><th>PM</th></tr></thead>
         <tbody id="vote-table"></tbody>
@@ -36,8 +50,7 @@
         const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
         
         const API_KEY = "$2a$10$r6wPDv0hgukgXM68NOZjxON2lK4cai1dwE.bNkP/2aK90BO5YJQXe"; 
-        // Using your direct, hardcoded URL endpoint as requested
-        const API_URL = "https://api.jsonbin.io/v3/b/6aec9e37ffd5d16053a942e5";
+        const API_URL = "https://jsonbin.io";
         
         let attendance = {};
 
@@ -62,6 +75,7 @@
         function renderTables() {
             let presHTML = "", voteHTML = "";
             const user = document.getElementById("username").value.trim().toUpperCase();
+            let listsFound = false;
 
             days.forEach(day => {
                 const amKey = day + "-AM";
@@ -69,29 +83,72 @@
                 const amList = attendance[amKey] || [];
                 const pmList = attendance[pmKey] || [];
                 
-                presHTML += "<tr><td><strong>" + day + "</strong></td><td>" + (amList.join(', ') || '–') + "</td><td>" + (pmList.join(', ') || '–') + "</td></tr>";
+                // 1. Calculate Capacities and pick styles
+                const amCount = amList.length;
+                const pmCount = pmList.length;
                 
-                // MODIFICATION: Instantly turns existing database choices green matching user input
+                const amClass = amCount >= 8 ? "capacity-danger" : "capacity-safe";
+                const pmClass = pmCount >= 8 ? "capacity-danger" : "capacity-safe";
+                
+                // 2. Build Master Table Row with counter on top and small initials below
+                presHTML += "<tr>" + 
+                    "<td><strong>" + day + "</strong></td>" +
+                    "<td>" +
+                        "<span class='capacity-badge " + amClass + "'>(" + amCount + "/8)</span>" +
+                        "<span class='initials-list'>" + (amList.join(', ') || '–') + "</span>" +
+                    "</td>" +
+                    "<td>" +
+                        "<span class='capacity-badge " + pmClass + "'>(" + pmCount + "/8)</span>" +
+                        "<span class='initials-list'>" + (pmList.join(', ') || '–') + "</span>" +
+                    "</td>" +
+                "</tr>";
+                
+                // Checkbox highlights matching current user
                 const amChecked = user && amList.includes(user) ? 'checked' : '';
                 const pmChecked = user && pmList.includes(user) ? 'checked' : '';
                 
+                if (amChecked || pmChecked) {
+                    listsFound = true;
+                }
+                
                 voteHTML += "<tr>" +
                     "<td>" + day + "</td>" +
-                    "<td><button class='btn-slot " + amChecked + "' onclick='toggle(\"" + amKey + "\")'>" + (amChecked ? '☑ AM' : '☐ AM') + "</button></td>" +
-                    "<td><button class='btn-slot " + pmChecked + "' onclick='toggle(\"" + pmKey + "\")'>" + (pmChecked ? '☑ PM' : '☐ PM') + "</button></td>" +
+                    "<td><button class='btn-slot " + amChecked + "' onclick='toggle(\"" + amKey + "\")'>" + (amChecked ? '☑ AM Selected' : '☐ AM') + "</button></td>" +
+                    "<td><button class='btn-slot " + pmChecked + "' onclick='toggle(\"" + pmKey + "\")'>" + (pmChecked ? '☑ PM Selected' : '☐ PM') + "</button></td>" +
                 "</tr>";
             });
+
             document.getElementById("presence-table").innerHTML = presHTML;
             document.getElementById("vote-table").innerHTML = voteHTML;
+
+            const statusDiv = document.getElementById("profile-status");
+            if (!user) {
+                statusDiv.innerText = "";
+            } else if (listsFound) {
+                statusDiv.innerText = "🟢 Found your schedule! Click any slot to modify your options.";
+                statusDiv.style.color = "#2e7d32";
+            } else {
+                statusDiv.innerText = "🆕 New initials pattern detected. Choose your slots below.";
+                statusDiv.style.color = "#0078d4";
+            }
         }
 
         function toggle(slotKey) {
-            const user = document.getElementById("username").value.trim().toUpperCase();
-            if (!user) { alert("Please type your initials before checking a slot!"); return; }
+            const inputField = document.getElementById("username");
+            const user = inputField.value.trim().toUpperCase();
+            
+            if (!user) { 
+                inputField.classList.add("alert-flash");
+                inputField.placeholder = "⚠️ YOU MUST TYPE YOUR INITIALS HERE FIRST!";
+                setTimeout(() => {
+                    inputField.classList.remove("alert-flash");
+                    inputField.placeholder = "👉 Enter initials to view or modify your data";
+                }, 2000);
+                return; 
+            }
             
             if (!attendance[slotKey]) attendance[slotKey] = [];
             if (attendance[slotKey].includes(user)) {
-                // Clicking a green active box filters the initials out to modify/remove
                 attendance[slotKey] = attendance[slotKey].filter(function(u) { return u !== user; });
             } else {
                 attendance[slotKey].push(user);
@@ -102,7 +159,7 @@
 
         async function saveData() {
             const saveButton = document.querySelector('.btn-save');
-            saveButton.innerText = "⏳ Saving...";
+            saveButton.innerText = "⏳ Saving Changes to Cloud...";
             saveButton.disabled = true;
 
             try {
@@ -133,7 +190,6 @@
         document.getElementById("username").addEventListener("input", renderTables);
         loadData();
         
-        // Auto-refresh layout overview from cloud data every 15 seconds
         setInterval(loadData, 15000);
     </script>
 </body>
