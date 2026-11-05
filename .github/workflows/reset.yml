@@ -1,0 +1,17 @@
+name: Weekly Friday Reset
+on:
+  schedule:
+    # Triggered automatically every Friday evening at 18:00 UTC (6:00 PM)
+    - cron: '0 18 * * 5'
+
+jobs:
+  reset-data:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clear Cloud Database
+        run: |
+          curl -X PUT \
+            -H "Content-Type: application/json" \
+            -H "X-Master-Key: $2a$10$r6wPDv0hgukgXM68NOZjxON2lK4cai1dwE.bNkP/2aK90BO5YJQXe" \
+            -d '{"status": "reset"}' \
+            https://jsonbin.io
