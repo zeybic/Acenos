@@ -24,7 +24,7 @@
     </table>
 
     <h3>Ma Présence</h3>
-    <input type="text" id="username" placeholder="👉 Enter initials">
+    <input type="text" id="username" placeholder="👉 Enter initials to view or modify your data">
     <table>
         <thead><tr><th>Day</th><th>AM</th><th>PM</th></tr></thead>
         <tbody id="vote-table"></tbody>
@@ -71,6 +71,7 @@
                 
                 presHTML += "<tr><td><strong>" + day + "</strong></td><td>" + (amList.join(', ') || '–') + "</td><td>" + (pmList.join(', ') || '–') + "</td></tr>";
                 
+                // MODIFICATION: Instantly turns existing database choices green matching user input
                 const amChecked = user && amList.includes(user) ? 'checked' : '';
                 const pmChecked = user && pmList.includes(user) ? 'checked' : '';
                 
@@ -90,6 +91,7 @@
             
             if (!attendance[slotKey]) attendance[slotKey] = [];
             if (attendance[slotKey].includes(user)) {
+                // Clicking a green active box filters the initials out to modify/remove
                 attendance[slotKey] = attendance[slotKey].filter(function(u) { return u !== user; });
             } else {
                 attendance[slotKey].push(user);
@@ -122,7 +124,7 @@
                 console.error("Cloud upload error:", error);
                 alert("Network error: Could not reach the cloud database.");
             } finally {
-                saveButton.innerText = "💾 Save ";
+                saveButton.innerText = "💾 Save Changes";
                 saveButton.disabled = false;
                 loadData();
             }
