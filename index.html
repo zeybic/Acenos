@@ -12,6 +12,8 @@
         .btn-slot.checked { background: #4CAF50; color: white; border-color: #4CAF50; }
         input[type="text"] { padding: 10px; margin-bottom: 15px; width: 100%; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
         h2, h3 { margin-top: 20px; color: #111; }
+        .btn-save { display: block; width: 100%; padding: 15px; background-color: #0078d4; color: white; border: none; border-radius: 4px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .btn-save:hover { background-color: #005a9e; }
     </style>
 </head>
 <body>
@@ -28,19 +30,21 @@
         <tbody id="vote-table"></tbody>
     </table>
 
+    <button class="btn-save" onclick="saveData()">💾 Save Changes</button>
+
     <script>
         const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
         
         const BIN_ID = "6aec9dc3ffd5d16053a94160"; 
         const API_KEY = "$2a$10$r6wPDv0hgukgXM68NOZjxON2lK4cai1dwE.bNkP/2aK90BO5YJQXe"; 
 
-        // Corrected base URL string concatenation
+        // Corrected full target production URL
         const API_URL = "https://jsonbin.io" + BIN_ID;
         let attendance = {};
 
         async function loadData() {
             try {
-                let res = await fetch(API_URL + "/latest?nocache=" + Math.random(), {
+                let res = await fetch(API_URL + "/latest", {
                     method: 'GET',
                     headers: { 
                         "X-Master-Key": API_KEY,
@@ -58,7 +62,7 @@
 
         function renderTables() {
             let presHTML = "", voteHTML = "";
-            const user = document.getElementById("username").value.trim();
+            const user = document.getElementById("username").value.trim().toUpperCase();
 
             days.forEach(day => {
                 const amKey = day + "-AM";
@@ -81,9 +85,9 @@
             document.getElementById("vote-table").innerHTML = voteHTML;
         }
 
-        async function toggle(slotKey) {
-            const user = document.getElementById("username").value.trim();
-            if (!user) { alert("Please type your name in the input box before clicking a time slot!"); return; }
+        function toggle(slotKey) {
+            const user = document.getElementById("username").value.trim().toUpperCase();
+            if (!user) { alert("Please type your initials before checking a slot!"); return; }
             
             if (!attendance[slotKey]) attendance[slotKey] = [];
             if (attendance[slotKey].includes(user)) {
@@ -93,9 +97,15 @@
             }
             
             renderTables();
-            
+        }
+
+        async function saveData() {
+            const saveButton = document.querySelector('.btn-save');
+            saveButton.innerText = "⏳ Saving...";
+            saveButton.disabled = true;
+
             try {
-                await fetch(API_URL, {
+                const res = await fetch(API_URL, {
                     method: 'PUT',
                     headers: { 
                         'Content-Type': 'application/json',
@@ -104,16 +114,26 @@
                     },
                     body: JSON.stringify(attendance)
                 });
+                if (res.ok) {
+                    alert("Changes saved to cloud successfully!");
+                } else {
+                    alert("Failed to save changes. Please try again.");
+                }
             } catch (error) {
                 console.error("Cloud upload error:", error);
+                alert("Network error: Could not reach the cloud database.");
+            } finally {
+                saveButton.innerText = "💾 Save Changes";
+                saveButton.disabled = false;
+                loadData();
             }
         }
 
         document.getElementById("username").addEventListener("input", renderTables);
         loadData();
         
-        // Auto-refresh the screen data every 10 seconds
-        setInterval(loadData, 10000);
+        // Auto-refresh layout overview from cloud data every 15 seconds
+        setInterval(loadData, 15000);
     </script>
 </body>
 </html>
