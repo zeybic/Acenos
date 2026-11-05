@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>📍 Office Presence Tracker</title>
+    <title>📍Tracking Présence Patchwork </title>
     <style>
         body { font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; background-color: #f9f9f9; color: #333; }
         table { width: 100%; border-collapse: collapse; margin-bottom: 25px; background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
@@ -17,13 +17,13 @@
     </style>
 </head>
 <body>
-    <h2>📍 Office Presence - Upcoming Week</h2>
+    <h2>📍 Présence Patchwork - </h2>
     <table>
         <thead><tr><th>Day</th><th>AM</th><th>PM</th></tr></thead>
         <tbody id="presence-table"></tbody>
     </table>
 
-    <h3>My Attendance</h3>
+    <h3>Ma Présence</h3>
     <input type="text" id="username" placeholder="👉 Enter initials">
     <table>
         <thead><tr><th>Day</th><th>AM</th><th>PM</th></tr></thead>
@@ -122,7 +122,7 @@
                 console.error("Cloud upload error:", error);
                 alert("Network error: Could not reach the cloud database.");
             } finally {
-                saveButton.innerText = "💾 Save Changes";
+                saveButton.innerText = "💾 Save ";
                 saveButton.disabled = false;
                 loadData();
             }
