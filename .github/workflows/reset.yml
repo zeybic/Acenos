@@ -1,17 +1,57 @@
 name: Weekly Friday Reset
 on:
   schedule:
-    # Triggered automatically every Friday evening at 20:00 UTC 
-    - cron: '0 20 * * 5'
+    # Uses the location parameter to track 7:00 PM Paris time natively, exactly once a week
+    - cron: '0 19 * * 5'
+      location: 'Europe/Paris'
 
 jobs:
   reset-data:
     runs-on: ubuntu-latest
     steps:
+      - name: Fetch and Format Weekly Resume
+        id: format_report
+        run: |
+          RAW_DATA=$(curl -s -H "X-Master-Key: $2a$10$r6wPDv0hgukgXM68NOZjxON2lK4cai1dwE.bNkP/2aK90BO5YJQXe" -H "X-Bin-Meta: false" https://jsonbin.io)
+          
+          SUMMARY="Here is the weekly office presence layout summary for Présence Patchwork:\n\n"
+          DAYS=("Monday" "Tuesday" "Wednesday" "Thursday" "Friday")
+          
+          for day in "${DAYS[@]}"; do
+            AM_VALS=$(echo "$RAW_DATA" | jq -r ".\"$day-AM\" | join(', ')")
+            PM_VALS=$(echo "$RAW_DATA" | jq -r ".\"$day-PM\" | join(', ')")
+            
+            AM_COUNT=$(echo "$RAW_DATA" | jq -r ".\"$day-AM\" | length")
+            PM_COUNT=$(echo "$RAW_DATA" | jq -r ".\"$day-PM\" | length")
+            
+            [ "$AM_VALS" == "null" ] || [ -z "$AM_VALS" ] && AM_VALS="–"
+            [ "$PM_VALS" == "null" ] || [ -z "$PM_VALS" ] && PM_VALS="–"
+            
+            SUMMARY="$SUMMARY■ $day:\n"
+            SUMMARY="$SUMMARY   • AM: ($AM_COUNT/8)\n     Initials: $AM_VALS\n"
+            SUMMARY="$SUMMARY   • PM: ($PM_COUNT/8)\n     Initials: $PM_VALS\n\n"
+          done
+          
+          echo "EMAIL_BODY<<EOF" >> $GITHUB_ENV
+          echo -e "$SUMMARY" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
+      - name: Dispatch Email Summary to Outlook
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ://office365.com
+          server_port: 587
+          username: "zeynep.bicer@acenos.fr"
+          password: ${{ secrets.OUTLOOK_APP_PASSWORD }}
+          subject: "📍 Weekly Office Summary - Présence Patchwork"
+          to: "zeynep.bicer@acenos.fr"
+          from: "Présence Patchwork Robot <zeynep.bicer@acenos.fr>"
+          body: ${{ env.EMAIL_BODY }}
+
       - name: Clear Cloud Database
         run: |
           curl -X PUT \
             -H "Content-Type: application/json" \
             -H "X-Master-Key: $2a$10$r6wPDv0hgukgXM68NOZjxON2lK4cai1dwE.bNkP/2aK90BO5YJQXe" \
             -d '{"Monday-AM":[],"Monday-PM":[],"Tuesday-AM":[],"Tuesday-PM":[],"Wednesday-AM":[],"Wednesday-PM":[],"Thursday-AM":[],"Thursday-PM":[],"Friday-AM":[],"Friday-PM":[]}' \
-            https://api.jsonbin.io/v3/b/6aec9e37ffd5d16053a942e5
+            https://jsonbin.io
