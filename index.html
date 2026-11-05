@@ -9,12 +9,16 @@
         th, td { border: 1px solid #ddd; padding: 12px; text-align: left; vertical-align: top; }
         th { background-color: #f2f2f2; font-weight: bold; }
         
-        /* Master Table Cell Capacity Indicators */
-        .capacity-badge { font-weight: bold; font-size: 15px; display: block; margin-bottom: 4px; }
-        .capacity-safe { color: #2e7d32; }   /* Green when under limit */
-        .capacity-danger { color: #d32f2f; } /* Red when 8 or more people */
+        /* Box Layout Container styles */
+        .box-container { display: flex; flex-direction: column; min-height: 45px; justify-content: flex-start; }
         
-        .initials-list { font-size: 11px; color: #666; display: block; line-height: 1.3; word-break: break-word; }
+        /* Capacity indicators directly inside the grids */
+        .capacity-badge { font-weight: bold; font-size: 16px; display: block; margin-bottom: 5px; }
+        .capacity-safe { color: #2e7d32; }   /* Green when under 8 spots */
+        .capacity-danger { color: #d32f2f; } /* Red when 8 or more spots are filled */
+        
+        /* Compact typography formatting for initials below */
+        .initials-list { font-size: 11px; color: #666; display: block; margin-top: 2px; line-height: 1.3; word-break: break-word; font-weight: normal; }
         
         /* Voting Buttons Layout */
         .btn-slot { display: block; width: 100%; padding: 10px; text-align: center; cursor: pointer; border: 1px solid #ccc; background: #fafafa; border-radius: 4px; font-size: 16px; transition: all 0.2s ease; }
@@ -83,27 +87,31 @@
                 const amList = attendance[amKey] || [];
                 const pmList = attendance[pmKey] || [];
                 
-                // 1. Calculate Capacities and pick styles
+                // Track count values explicitly
                 const amCount = amList.length;
                 const pmCount = pmList.length;
                 
+                // Compute color formatting classes based on capacity thresholds
                 const amClass = amCount >= 8 ? "capacity-danger" : "capacity-safe";
                 const pmClass = pmCount >= 8 ? "capacity-danger" : "capacity-safe";
                 
-                // 2. Build Master Table Row with counter on top and small initials below
+                // MODIFIED: Injected capacity trackers directly inside layout table boxes
                 presHTML += "<tr>" + 
                     "<td><strong>" + day + "</strong></td>" +
                     "<td>" +
-                        "<span class='capacity-badge " + amClass + "'>(" + amCount + "/8)</span>" +
-                        "<span class='initials-list'>" + (amList.join(', ') || '–') + "</span>" +
+                        "<div class='box-container'>" +
+                            "<span class='capacity-badge " + amClass + "'>" + amCount + "/8</span>" +
+                            "<span class='initials-list'>" + (amList.join(', ') || '–') + "</span>" +
+                        "</div>" +
                     "</td>" +
                     "<td>" +
-                        "<span class='capacity-badge " + pmClass + "'>(" + pmCount + "/8)</span>" +
-                        "<span class='initials-list'>" + (pmList.join(', ') || '–') + "</span>" +
+                        "<div class='box-container'>" +
+                            "<span class='capacity-badge " + pmClass + "'>" + pmCount + "/8</span>" +
+                            "<span class='initials-list'>" + (pmList.join(', ') || '–') + "</span>" +
+                        "</div>" +
                     "</td>" +
                 "</tr>";
                 
-                // Checkbox highlights matching current user
                 const amChecked = user && amList.includes(user) ? 'checked' : '';
                 const pmChecked = user && pmList.includes(user) ? 'checked' : '';
                 
