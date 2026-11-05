@@ -34,13 +34,13 @@
         const BIN_ID = "6aec9dc3ffd5d16053a94160"; 
         const API_KEY = "$2a$10$r6wPDv0hgukgXM68NOZjxON2lK4cai1dwE.bNkP/2aK90BO5YJQXe"; 
 
-        // Fixed the API URL format completely here
-        const API_URL = `https://jsonbin.io{BIN_ID}`;
+        // Corrected base URL string concatenation
+        const API_URL = "https://jsonbin.io" + BIN_ID;
         let attendance = {};
 
         async function loadData() {
             try {
-                let res = await fetch(`${API_URL}/latest?nocache=${Math.random()}`, {
+                let res = await fetch(API_URL + "/latest?nocache=" + Math.random(), {
                     method: 'GET',
                     headers: { 
                         "X-Master-Key": API_KEY,
@@ -61,20 +61,21 @@
             const user = document.getElementById("username").value.trim();
 
             days.forEach(day => {
-                const amKey = `${day}-AM`, pmKey = `${day}-PM`;
+                const amKey = day + "-AM";
+                const pmKey = day + "-PM";
                 const amList = attendance[amKey] || [];
                 const pmList = attendance[pmKey] || [];
                 
-                presHTML += `<tr><td><strong>${day}</strong></td><td>${amList.join(', ') || '–'}</td><td>${pmList.join(', ') || '–'}</td></tr>`;
+                presHTML += "<tr><td><strong>" + day + "</strong></td><td>" + (amList.join(', ') || '–') + "</td><td>" + (pmList.join(', ') || '–') + "</td></tr>";
                 
                 const amChecked = user && amList.includes(user) ? 'checked' : '';
                 const pmChecked = user && pmList.includes(user) ? 'checked' : '';
                 
-                voteHTML += `<tr>
-                    <td>${day}</td>
-                    <td><button class="btn-slot ${amChecked}" onclick="toggle('${amKey}')">${amChecked ? '☑ AM' : '☐ AM'}</button></td>
-                    <td><button class="btn-slot ${pmChecked}" onclick="toggle('${pmKey}')">${pmChecked ? '☑ PM' : '☐ PM'}</button></td>
-                </tr>`;
+                voteHTML += "<tr>" +
+                    "<td>" + day + "</td>" +
+                    "<td><button class='btn-slot " + amChecked + "' onclick='toggle(\"" + amKey + "\")'>" + (amChecked ? '☑ AM' : '☐ AM') + "</button></td>" +
+                    "<td><button class='btn-slot " + pmChecked + "' onclick='toggle(\"" + pmKey + "\")'>" + (pmChecked ? '☑ PM' : '☐ PM') + "</button></td>" +
+                "</tr>";
             });
             document.getElementById("presence-table").innerHTML = presHTML;
             document.getElementById("vote-table").innerHTML = voteHTML;
@@ -86,7 +87,7 @@
             
             if (!attendance[slotKey]) attendance[slotKey] = [];
             if (attendance[slotKey].includes(user)) {
-                attendance[slotKey] = attendance[slotKey].filter(u => u !== user);
+                attendance[slotKey] = attendance[slotKey].filter(function(u) { return u !== user; });
             } else {
                 attendance[slotKey].push(user);
             }
@@ -111,7 +112,7 @@
         document.getElementById("username").addEventListener("input", renderTables);
         loadData();
         
-        // Auto-refresh the screen data every 10 seconds so coworkers see each other update live
+        // Auto-refresh the screen data every 10 seconds
         setInterval(loadData, 10000);
     </script>
 </body>
