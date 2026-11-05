@@ -1,9 +1,8 @@
 name: Weekly Friday Reset
 on:
   schedule:
-    # Uses the location parameter to track 7:00 PM Paris time natively, exactly once a week
-    - cron: '0 19 * * 5'
-      location: 'Europe/Paris'
+    # Triggered automatically every Friday evening at exactly 18:00 UTC
+    - cron: '0 18 * * 5'
 
 jobs:
   reset-data:
@@ -12,7 +11,7 @@ jobs:
       - name: Fetch and Format Weekly Resume
         id: format_report
         run: |
-          RAW_DATA=$(curl -s -H "X-Master-Key: $2a$10$r6wPDv0hgukgXM68NOZjxON2lK4cai1dwE.bNkP/2aK90BO5YJQXe" -H "X-Bin-Meta: false" https://jsonbin.io)
+          RAW_DATA=$(curl -s -H "X-Master-Key: \$2a\$10\$r6wPDv0hgukgXM68NOZjxON2lK4cai1dwE.bNkP/2aK90BO5YJQXe" -H "X-Bin-Meta: false" https://jsonbin.io)
           
           SUMMARY="Here is the weekly office presence layout summary for Présence Patchwork:\n\n"
           DAYS=("Monday" "Tuesday" "Wednesday" "Thursday" "Friday")
@@ -52,6 +51,6 @@ jobs:
         run: |
           curl -X PUT \
             -H "Content-Type: application/json" \
-            -H "X-Master-Key: $2a$10$r6wPDv0hgukgXM68NOZjxON2lK4cai1dwE.bNkP/2aK90BO5YJQXe" \
+            -H "X-Master-Key: \$2a\$10\$r6wPDv0hgukgXM68NOZjxON2lK4cai1dwE.bNkP/2aK90BO5YJQXe" \
             -d '{"Monday-AM":[],"Monday-PM":[],"Tuesday-AM":[],"Tuesday-PM":[],"Wednesday-AM":[],"Wednesday-PM":[],"Thursday-AM":[],"Thursday-PM":[],"Friday-AM":[],"Friday-PM":[]}' \
             https://jsonbin.io
