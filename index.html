@@ -35,16 +35,15 @@
     <script>
         const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
         
-        const BIN_ID = "6aec9dc3ffd5d16053a94160"; 
         const API_KEY = "$2a$10$r6wPDv0hgukgXM68NOZjxON2lK4cai1dwE.bNkP/2aK90BO5YJQXe"; 
-
-        // Corrected full target production URL
-        const API_URL = "https://jsonbin.io" + BIN_ID;
+        // Using your direct, hardcoded URL endpoint as requested
+        const API_URL = "https://api.jsonbin.io/v3/b/6aec9e37ffd5d16053a942e5";
+        
         let attendance = {};
 
         async function loadData() {
             try {
-                let res = await fetch(API_URL + "/latest", {
+                let res = await fetch(API_URL + "/latest?nocache=" + Math.random(), {
                     method: 'GET',
                     headers: { 
                         "X-Master-Key": API_KEY,
