@@ -1,8 +1,8 @@
 name: Weekly Friday Reset
 on:
   schedule:
-    # Triggered automatically every Friday evening at 18:00 UTC (6:00 PM)
-    - cron: '0 18 * * 5'
+    # Triggered automatically every Friday evening at 20:00 UTC 
+    - cron: '0 20 * * 5'
 
 jobs:
   reset-data:
@@ -14,4 +14,4 @@ jobs:
             -H "Content-Type: application/json" \
             -H "X-Master-Key: $2a$10$r6wPDv0hgukgXM68NOZjxON2lK4cai1dwE.bNkP/2aK90BO5YJQXe" \
             -d '{"Monday-AM":[],"Monday-PM":[],"Tuesday-AM":[],"Tuesday-PM":[],"Wednesday-AM":[],"Wednesday-PM":[],"Thursday-AM":[],"Thursday-PM":[],"Friday-AM":[],"Friday-PM":[]}' \
-            https://jsonbin.io
+            https://api.jsonbin.io/v3/b/6aec9e37ffd5d16053a942e5
