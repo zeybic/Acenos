@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>📊 Synthèse Présence Patchwork</title>
+<style>
+  body { font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; background: #f9f9f9; color: #333; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 25px; background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+  th, td { border: 1px solid #ddd; padding: 12px; text-align: left; vertical-align: top; }
+  th { background: #f2f2f2; }
+  select { width: 100%; padding: 10px; font-size: 16px; margin-bottom: 15px; border-radius: 4px; border: 1px solid #ccc; }
+  small { display: block; font-size: 11px; color: #666; }
+</style>
+</head>
+<body>
+  <h2>📊 Synthèse Présence Patchwork</h2>
+  <select id="week"></select>
+
+  <table>
+    <thead><tr><th>Day</th><th>AM</th><th>PM</th></tr></thead>
+    <tbody id="days"></tbody>
+  </table>
+
+  <h3>Total par personne (demi-journées)</h3>
+  <table>
+    <thead><tr><th>Trigramme</th><th>Total</th></tr></thead>
+    <tbody id="totals"></tbody>
+  </table>
+
+<script>
+  const HIST_URL = "https://api.jsonbin.io/v3/b/6aedf5c2ac6210605a72c63b/latest";
+  const READ_KEY = ""; // read-only Access Key, leave empty if the bin is public
+  const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+  const sel = document.getElementById("week");
+  let history = {};
+
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const fmt = d => d.split("-").reverse().join("/");
+
+  async function load() {
+    const headers = { "X-Bin-Meta": "false" };
+    if (READ_KEY) headers["X-Access-Key"] = READ_KEY;
+    try {
+      const res = await fetch(HIST_URL, { headers });
+      const data = await res.json();
+      history = {};
+      Object.keys(data).filter(k => /^\d{4}-\d{2}-\d{2}$/.test(k)).forEach(k => history[k] = data[k]);
+    } catch (e) { history = {}; }
+
+    const weeks = Object.keys(history).sort().reverse();
+    sel.innerHTML = weeks.length
+      ? weeks.map(w => `<option value="${w}">Semaine du ${fmt(w)}</option>`).join("") + '<option value="ALL">Toutes les semaines</option>'
+      : '<option value="">Aucune donnée</option>';
+    render();
+  }
+
+  function render() {
+    const v = sel.value;
+    const weeks = v === "ALL" ? Object.keys(history) : (history[v] ? [v] : []);
+    const totals = {};
+    let rows = "";
+
+    days.forEach(day => {
+      const cells = ["AM", "PM"].map(p => {
+        const names = [];
+        weeks.forEach(w => (history[w][day + "-" + p] || []).forEach(n => {
+          names.push(n);
+          totals[n] = (totals[n] || 0) + 1;
+        }));
+        return v === "ALL"
+          ? `<b>${names.length}</b>`
+          : `<b>${names.length}</b><small>${esc(names.join(", ") || "–")}</small>`;
+      });
+      rows += `<tr><td><strong>${day}</strong></td><td>${cells[0]}</td><td>${cells[1]}</td></tr>`;
+    });
+
+    document.getElementById("days").innerHTML = rows;
+    document.getElementById("totals").innerHTML = Object.entries(totals)
+      .sort((a, b) => b[1] - a[1])
+      .map(([n, c]) => `<tr><td>${esc(n)}</td><td>${c}</td></tr>`).join("") || "<tr><td colspan='2'>–</td></tr>";
+  }
+
+  sel.addEventListener("change", render);
+  load();
+</script>
+</body>
+</html>
