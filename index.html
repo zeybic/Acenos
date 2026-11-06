@@ -23,7 +23,7 @@
     </style>
 </head>
 <body>
-    <h2>📍 Présence Patchwork - </h2>
+    <h2 id="title-header">📍 Présence Patchwork - </h2>
     <table>
         <thead><tr><th>Day</th><th>AM</th><th>PM</th></tr></thead>
         <tbody id="presence-table"></tbody>
@@ -46,6 +46,26 @@
         const API_URL = "https://api.jsonbin.io/v3/b/6aec9e37ffd5d16053a942e5";
         
         let attendance = {};
+
+        // Dynamic Next Monday Date Calculation Function
+        function updateHeaderDate() {
+            const today = new Date();
+            const currentDay = today.getDay(); // 0 = Sunday, 1 = Monday...
+            
+            let daysToNextMonday = 1 - currentDay;
+            if (daysToNextMonday <= 0) {
+                daysToNextMonday += 7; 
+            }
+            
+            const nextMonday = new Date(today);
+            nextMonday.setDate(today.getDate() + daysToNextMonday);
+            
+            const dd = String(nextMonday.getDate()).padStart(2, '0');
+            const mm = String(nextMonday.getMonth() + 1).padStart(2, '0');
+            const yyyy = nextMonday.getFullYear();
+            
+            document.getElementById("title-header").innerText = "📍 Présence Patchwork - La semaine du " + dd + "/" + mm + "/" + yyyy;
+        }
 
         async function loadData() {
             try {
@@ -145,6 +165,7 @@
         }
 
         document.getElementById("username").addEventListener("input", renderTables);
+        updateHeaderDate();
         loadData();
         
         // Auto-refresh layout overview from cloud data every 15 seconds
