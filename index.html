@@ -46,6 +46,7 @@
         const API_URL = "https://api.jsonbin.io/v3/b/6aec9e37ffd5d16053a942e5";
         
         let attendance = {};
+        let isEditing = false;
 
         // Dynamic Next Monday Date Calculation Function
         function updateHeaderDate() {
@@ -68,6 +69,7 @@
         }
 
         async function loadData() {
+            if (isEditing) return; // Add this line
             try {
                 let res = await fetch(API_URL + "/latest?nocache=" + Math.random(), {
                     method: 'GET',
@@ -122,6 +124,8 @@
         function toggle(slotKey) {
             const user = document.getElementById("username").value.trim().toUpperCase();
             if (!user) { alert("Please type your initials before checking a slot!"); return; }
+
+            isEditing = true; // Add this line
             
             if (!attendance[slotKey]) attendance[slotKey] = [];
             if (attendance[slotKey].includes(user)) {
@@ -135,6 +139,7 @@
         }
 
         async function saveData() {
+            
             const saveButton = document.querySelector('.btn-save');
             saveButton.innerText = "⏳ Saving...";
             saveButton.disabled = true;
@@ -151,6 +156,7 @@
                 });
                 if (res.ok) {
                     alert("Changes saved to cloud successfully!");
+                    isEditing = false; // Add this line
                 } else {
                     alert("Failed to save changes. Please try again.");
                 }
