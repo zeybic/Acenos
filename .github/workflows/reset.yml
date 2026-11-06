@@ -1,22 +1,39 @@
 name: Weekly Friday Reset
 on:
   schedule:
-    # Triggered automatically every Friday evening at exactly 18:00 UTC
     - cron: '0 18 * * 5'
+  workflow_dispatch:
 
 jobs:
   reset-data:
     runs-on: ubuntu-latest
+    env:
+      KEY: ${{ secrets.JSONBIN_KEY }}
+      MAIN: https://api.jsonbin.io/v3/b/6aec9e37ffd5d16053a942e5
+      HIST: https://api.jsonbin.io/v3/b/6aedf5c2ac6210605a72c63b
     steps:
-      
-      - name: Clear Cloud Database and Pre-calculate Week Header
+      - name: Archive week then reset
         run: |
-          # Calculate the date of the next Monday (Friday + 3 days)
-          NEXT_MONDAY=$(date -d "+3 days" +"%d/%m/%Y")
-          HEADER_TEXT="📍 Présence Patchwork - La semaine du $NEXT_MONDAY"
-          
-          curl -X PUT \
-            -H "Content-Type: application/json" \
-            -H "X-Master-Key: \$2a\$10\$r6wPDv0hgukgXM68NOZjxON2lK4cai1dwE.bNkP/2aK90BO5YJQXe" \
-            -d "{\"Monday-AM\":[],\"Monday-PM\":[],\"Tuesday-AM\":[],\"Tuesday-PM\":[],\"Wednesday-AM\":[],\"Wednesday-PM\":[],\"Thursday-AM\":[],\"Thursday-PM\":[],\"Friday-AM\":[],\"Friday-PM\":[],\"currentWeekTitle\":\"$HEADER_TEXT\"}" \
-            https://jsonbin.io
+          set -e
+          WEEK_START=$(date -d "-4 days" +%Y-%m-%d)
+          NEXT_MONDAY=$(date -d "+3 days" +%d/%m/%Y)
+          HEADER="📍 Présence Patchwork - La semaine du $NEXT_MONDAY"
+
+          CURRENT=$(curl -sf -H "X-Master-Key: $KEY" -H "X-Bin-Meta: false" "$MAIN/latest")
+          HISTORY=$(curl -sf -H "X-Master-Key: $KEY" -H "X-Bin-Meta: false" "$HIST/latest")
+
+          echo "$HISTORY" | jq --arg w "$WEEK_START" --argjson d "$CURRENT" \
+            '. + {($w): ($d | del(.currentWeekTitle))}' > history.json
+
+          curl -sf -X PUT -H "Content-Type: application/json" \
+            -H "X-Master-Key: $KEY" -H "X-Bin-Meta: false" \
+            -d @history.json "$HIST"
+
+          jq -n --arg t "$HEADER" '{
+            "Monday-AM":[],"Monday-PM":[],"Tuesday-AM":[],"Tuesday-PM":[],
+            "Wednesday-AM":[],"Wednesday-PM":[],"Thursday-AM":[],"Thursday-PM":[],
+            "Friday-AM":[],"Friday-PM":[],"currentWeekTitle":$t}' > reset.json
+
+          curl -sf -X PUT -H "Content-Type: application/json" \
+            -H "X-Master-Key: $KEY" -H "X-Bin-Meta: false" \
+            -d @reset.json "$MAIN"
