@@ -48,25 +48,6 @@
         let attendance = {};
         let isEditing = false;
 
-        // Dynamic Next Monday Date Calculation Function
-        function updateHeaderDate() {
-            const today = new Date();
-            const currentDay = today.getDay(); // 0 = Sunday, 1 = Monday...
-            
-            let daysToNextMonday = 1 - currentDay;
-            if (daysToNextMonday <= 0) {
-                daysToNextMonday += 7; 
-            }
-            
-            const nextMonday = new Date(today);
-            nextMonday.setDate(today.getDate() + daysToNextMonday);
-            
-            const dd = String(nextMonday.getDate()).padStart(2, '0');
-            const mm = String(nextMonday.getMonth() + 1).padStart(2, '0');
-            const yyyy = nextMonday.getFullYear();
-            
-            document.getElementById("title-header").innerText = "📍 Présence Patchwork - La semaine du " + dd + "/" + mm + "/" + yyyy;
-        }
 
         async function loadData() {
             if (isEditing) return; // Add this line
@@ -90,6 +71,7 @@
         function renderTables() {
             let presHTML = "", voteHTML = "";
             const user = document.getElementById("username").value.trim().toUpperCase();
+            document.getElementById("title-header").innerText = attendance.currentWeekTitle || "📍 Présence Patchwork - ";
 
             days.forEach(day => {
                 const amKey = day + "-AM";
@@ -171,7 +153,6 @@
         }
 
         document.getElementById("username").addEventListener("input", renderTables);
-        updateHeaderDate();
         loadData();
         
         // Auto-refresh layout overview from cloud data every 15 seconds
