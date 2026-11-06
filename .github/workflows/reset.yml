@@ -30,9 +30,9 @@ jobs:
             -d @history.json "$HIST"
 
           jq -n --arg t "$HEADER" '{
-            "Monday-AM":[],"Monday-PM":[],"Tuesday-AM":[],"Tuesday-PM":[],
-            "Wednesday-AM":[],"Wednesday-PM":[],"Thursday-AM":[],"Thursday-PM":[],
-            "Friday-AM":[],"Friday-PM":[],"currentWeekTitle":$t}' > reset.json
+            "Lundi-AM":[],"Lundi-PM":[],"Mardi-AM":[],"Mardi-PM":[],
+            "Mercredi-AM":[],"Mercredi-PM":[],"Jeudi-AM":[],"Jeudi-PM":[],
+            "Vendredi-AM":[],"Vendredi-PM":[],"currentWeekTitle":$t}' > reset.json
 
           curl -sf -X PUT -H "Content-Type: application/json" \
             -H "X-Master-Key: $KEY" -H "X-Bin-Meta: false" \
