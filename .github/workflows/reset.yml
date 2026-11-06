@@ -8,6 +8,7 @@ jobs:
   reset-data:
     runs-on: ubuntu-latest
     steps:
+      
       - name: Clear Cloud Database and Pre-calculate Week Header
         run: |
           # Calculate the date of the next Monday (Friday + 3 days)
