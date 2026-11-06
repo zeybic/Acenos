@@ -71,7 +71,26 @@
         function renderTables() {
             let presHTML = "", voteHTML = "";
             const user = document.getElementById("username").value.trim().toUpperCase();
-            document.getElementById("title-header").innerText = attendance.currentWeekTitle || "📍 Présence Patchwork - ";
+            // If the cloud database is blank, calculate this current week's Monday locally
+            if (attendance.currentWeekTitle) {
+                document.getElementById("title-header").innerText = attendance.currentWeekTitle;
+            } else {
+                const today = new Date();
+                const currentDay = today.getDay(); // 0 = Sunday, 1 = Monday...
+                
+                // Calculate days back to find THIS current week's Monday
+                let daysBackToMonday = currentDay - 1;
+                if (currentDay === 0) daysBackToMonday = 6; // Treat Sunday as trailing end of week
+                
+                const currentMonday = new Date(today);
+                currentMonday.setDate(today.getDate() - daysBackToMonday);
+                
+                const dd = String(currentMonday.getDate()).padStart(2, '0');
+                const mm = String(currentMonday.getMonth() + 1).padStart(2, '0');
+                const yyyy = currentMonday.getFullYear();
+                
+                document.getElementById("title-header").innerText = "📍 Présence Patchwork - La semaine du " + dd + "/" + mm + "/" + yyyy;
+            }
 
             days.forEach(day => {
                 const amKey = day + "-AM";
