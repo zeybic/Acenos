@@ -30,7 +30,7 @@
     </table>
 
     <h3>Ma Présence</h3>
-    <input type="text" id="username" placeholder="👉 Renseignez vos initiales pour modifier votre planning">
+    <input type="text" id="username" placeholder="👉 Renseignez votre trigramme pour modifier votre planning">
     <table>
         <thead><tr><th>Day</th><th>AM</th><th>PM</th></tr></thead>
         <tbody id="vote-table"></tbody>
@@ -124,7 +124,7 @@
 
         function toggle(slotKey) {
             const user = document.getElementById("username").value.trim().toUpperCase();
-            if (!user) { alert("Please type your initials before checking a slot!"); return; }
+            if (!user) { alert("Renseignez votre trigramme"); return; }
 
             isEditing = true; // Add this line
             
