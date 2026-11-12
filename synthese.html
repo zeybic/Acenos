@@ -19,6 +19,7 @@
     max-width: 100%;
     margin: 0 auto 10px;
 }
+</style>
 </head>
 <body>
   <div class="logo-wrap"><img src="logo.png" alt="Logo" class="logo"></div>
@@ -43,7 +44,7 @@
   const days = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi"];
   const sel = document.getElementById("week");
   let history = {};
-
+  
   const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const fmt = d => d.split("-").reverse().join("/");
 
